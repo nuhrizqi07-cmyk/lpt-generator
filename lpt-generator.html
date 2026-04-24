@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LPT Generator — Bea Cukai Pasuruan</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --navy: #0a1f3d;
+    --navy-mid: #122b52;
+    --navy-light: #1e407a;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-pale: #f5e9c8;
+    --cream: #faf8f3;
+    --white: #ffffff;
+    --gray-soft: #e8e4da;
+    --gray-text: #5a5a5a;
+    --success: #2d7d4f;
+    --error: #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    color: var(--navy);
+  }
+
+  /* Header */
+  .header {
+    background: var(--navy);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 32px;
+    border-bottom: 3px solid var(--gold);
+  }
+  .header-logo {
+    width: 48px;
+    height: 48px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'EB Garamond', serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--navy);
+    flex-shrink: 0;
+  }
+  .header-text h1 {
+    font-family: 'EB Garamond', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 0.3px;
+  }
+  .header-text p {
+    font-size: 11px;
+    color: var(--gold-light);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* Layout */
+  .app-container {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    min-height: calc(100vh - 79px);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--navy-mid);
+    padding: 28px 24px;
+    border-right: 1px solid rgba(201,168,76,0.2);
+    overflow-y: auto;
+    max-height: calc(100vh - 79px);
+    position: sticky;
+    top: 79px;
+  }
+  .sidebar-section {
+    margin-bottom: 28px;
+  }
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(201,168,76,0.25);
+  }
+
+  .field-group {
+    margin-bottom: 16px;
+  }
+  .field-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gold-light);
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--white);
+    outline: none;
+    transition: all 0.2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--gold);
+    background: rgba(255,255,255,0.1);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+  }
+  input::placeholder, textarea::placeholder {
+    color: rgba(255,255,255,0.3);
+    font-style: italic;
+  }
+  select option {
+    background: var(--navy);
+    color: var(--white);
+  }
+
+  /* Pelaksana ST selector */
+  .pelaksana-list {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold) transparent;
+  }
+  .pelaksana-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.15s;
+  }
+  .pelaksana-item:last-child { border-bottom: none; }
+  .pelaksana-item:hover { background: rgba(201,168,76,0.1); }
+  .pelaksana-item.selected { background: rgba(201,168,76,0.15); }
+  .pelaksana-item input[type="checkbox"] {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    accent-color: var(--gold);
+    cursor: pointer;
+  }
+  .pelaksana-info { flex: 1; min-width: 0; }
+  .pelaksana-nama {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pelaksana-jabatan {
+    font-size: 10px;
+    color: rgba(255,255,255,0.45);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+  }
+
+  .search-pegawai {
+    margin-bottom: 8px;
+  }
+  .selected-count {
+    font-size: 11px;
+    color: var(--gold-light);
+    margin-top: 6px;
+    text-align: right;
+  }
+
+  /* API Key section */
+  .api-section {
+    background: rgba(201,168,76,0.08);
+    border: 1px dashed rgba(201,168,76,0.35);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .api-section .field-label {
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .api-key-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .api-key-row input {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  .btn-icon {
+    background: rgba(201,168,76,0.2);
+    border: 1px solid rgba(201,168,76,0.4);
+    border-radius: 6px;
+    color: var(--gold);
+    padding: 10px 11px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .btn-icon:hover { background: rgba(201,168,76,0.35); }
+
+  /* Main content */
+  .main-content {
+    padding: 32px 40px;
+    overflow-y: auto;
+  }
+
+  .section-card {
+    background: var(--white);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    border: 1px solid var(--gray-soft);
+    overflow: hidden;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+  }
+  .section-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-badge {
+    width: 28px; height: 28px;
+    background: var(--gold);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'EB Garamond', serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--navy);
+    flex-shrink: 0;
+  }
+  .section-title-text h2 {
+    font-family: 'EB Garamond', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--white);
+  }
+  .section-title-text p {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 1px;
+  }
+  .section-body {
+    padding: 22px;
+  }
+
+  .form-row {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .form-row.cols-1 { grid-template-columns: 1fr; }
+
+  .main-field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-text);
+    margin-bottom: 6px;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .main-field-label span {
+    color: var(--error);
+    margin-left: 2px;
+  }
+
+  input.main-input, select.main-input, textarea.main-input {
+    background: var(--cream);
+    border: 1.5px solid var(--gray-soft);
+    color: var(--navy);
+    font-size: 14px;
+    border-radius: 8px;
+    padding: 11px 14px;
+  }
+  input.main-input:focus, select.main-input:focus, textarea.main-input:focus {
+    border-color: var(--navy-light);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(30,64,122,0.08);
+    color: var(--navy);
+  }
+  select.main-input option { color: var(--navy); background: var(--white); }
+  textarea.main-input { resize: vertical; min-height: 80px; }
+
+  /* AI Generate button */
+  .ai-section {
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--gray-soft);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .btn-ai {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--navy), var(--navy-light));
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(10,31,61,0.2);
+  }
+  .btn-ai:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(10,31,61,0.3); }
+  .btn-ai:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-ai .ai-icon { font-size: 16px; }
+
+  /* Result textarea */
+  .result-box {
+    background: #f0f4ff;
+    border: 1.5px solid #c5d4f0;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--navy);
+    min-height: 80px;
+    white-space: pre-wrap;
+    font-family: 'DM Sans', sans-serif;
+    position: relative;
+  }
+  .result-box.loading { color: var(--gray-text); font-style: italic; }
+  .result-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--navy-light);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .result-label::before {
+    content: '✦';
+    color: var(--gold);
+    font-size: 10px;
+  }
+
+  /* Action bar */
+  .action-bar {
+    background: var(--white);
+    border-top: 1px solid var(--gray-soft);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  }
+  .action-status {
+    font-size: 13px;
+    color: var(--gray-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-export {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--navy);
+    border: none;
+    border-radius: 10px;
+    padding: 13px 28px;
+    font-family: 'EB Garamond', serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 3px 12px rgba(201,168,76,0.35);
+  }
+  .btn-export:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(201,168,76,0.45); }
+  .btn-export:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--navy);
+    color: var(--white);
+    padding: 14px 22px;
+    border-radius: 10px;
+    border-left: 4px solid var(--gold);
+    font-size: 14px;
+    z-index: 999;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { border-color: var(--error); }
+
+  /* Spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: var(--white);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+
+  /* Scrollbar */
+  .pelaksana-list::-webkit-scrollbar { width: 5px; }
+  .pelaksana-list::-webkit-scrollbar-track { background: transparent; }
+  .pelaksana-list::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+
+  @media (max-width: 900px) {
+    .app-container { grid-template-columns: 1fr; }
+    .sidebar { position: static; max-height: none; }
+    .main-content { padding: 20px; }
+    .action-bar { padding: 16px 20px; flex-direction: column; }
+    .form-row.cols-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-logo">BC</div>
+    <div class="header-text">
+      <h1>LPT Generator — Customs Visit Customer</h1>
+      <p>KPPBC TMP A Pasuruan · Bea Cukai Pasuruan</p>
+    </div>
+  </div>
+</div>
+
+<div class="app-container">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- API Key -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">API Anthropic</div>
+      <div class="api-section">
+        <label class="field-label">🔑 Anthropic API Key</label>
+        <div class="api-key-row">
+          <input type="password" id="apiKey" placeholder="sk-ant-..." />
+          <button class="btn-icon" onclick="toggleApiVisibility()" title="Tampilkan/Sembunyikan">👁</button>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:8px;">
+          Key disimpan di browser (localStorage) dan tidak dikirim ke server manapun selain api.anthropic.com
+        </div>
+      </div>
+    </div>
+
+    <!-- Nomor ST -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Data Surat Tugas</div>
+      <div class="field-group">
+        <label class="field-label">Nomor ST</label>
+        <input type="text" id="nomorST" placeholder="ST-58/KBC.1102/2024" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Tanggal ST</label>
+        <input type="date" id="tanggalST" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Tanggal Laporan</label>
+        <input type="date" id="tanggalLaporan" />
+      </div>
+    </div>
+
+    <!-- Pelaksana -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Pelaksana ST</div>
+      <div class="search-pegawai">
+        <input type="text" id="searchPegawai" placeholder="🔍 Cari nama pegawai..." oninput="filterPelaksana()" />
+      </div>
+      <div class="pelaksana-list" id="pelaksanaList"></div>
+      <div class="selected-count" id="selectedCount">0 pegawai dipilih</div>
+    </div>
+
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content" id="mainContent">
+
+    <!-- POIN A -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-badge">A</div>
+        <div class="section-title-text">
+          <h2>Pendahuluan</h2>
+          <p>Latar belakang, maksud &amp; tujuan, ruang lingkup</p>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="form-row cols-2">
+          <div>
+            <label class="main-field-label">Nama Perusahaan <span>*</span></label>
+            <input type="text" class="main-input" id="namaPerusahaan" placeholder="PT. Atomization Technology Indonesia" />
+          </div>
+          <div>
+            <label class="main-field-label">Jenis Kegiatan</label>
+            <select class="main-input" id="jenisKegiatan">
+              <option value="Customs Visit Customer">Customs Visit Customer</option>
+              <option value="Kunjungan Lapangan">Kunjungan Lapangan</option>
+              <option value="Sosialisasi Kepabeanan">Sosialisasi Kepabeanan</option>
+              <option value="Monitoring dan Evaluasi">Monitoring dan Evaluasi</option>
+              <option value="Asistensi Teknis">Asistensi Teknis</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row cols-2">
+          <div>
+            <label class="main-field-label">Lokasi Perusahaan</label>
+            <input type="text" class="main-input" id="lokasiPerusahaan" placeholder="Jl. Rembang Industri, Pasuruan" />
+          </div>
+          <div>
+            <label class="main-field-label">Tanggal Kegiatan</label>
+            <input type="date" class="main-input" id="tanggalKegiatan" />
+          </div>
+        </div>
+        <div class="form-row cols-1">
+          <div>
+            <label class="main-field-label">Catatan Latar Belakang</label>
+            <textarea class="main-input" id="catatanLatarBelakang" rows="3" placeholder="Isi catatan tambahan untuk latar belakang (opsional)..."></textarea>
+          </div>
+        </div>
+        <div class="form-row cols-1">
+          <div>
+            <label class="main-field-label">Ruang Lingkup Kegiatan</label>
+            <textarea class="main-input" id="ruangLingkup" rows="2" placeholder="Kegiatan kepabeanan dan cukai yang dilaksanakan oleh perusahaan..." /></textarea>
+          </div>
+        </div>
+        <div class="ai-section">
+          <button class="btn-ai" onclick="generateSection('A')">
+            <span class="ai-icon">✦</span> Kembangkan dengan AI
+          </button>
+        </div>
+        <div id="resultA" style="display:none;margin-top:16px;">
+          <div class="result-label">Hasil AI — Poin A</div>
+          <div class="result-box" id="resultAText"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POIN B -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-badge">B</div>
+        <div class="section-title-text">
+          <h2>Kegiatan yang Dilaksanakan</h2>
+          <p>Rangkaian agenda dan aktivitas kunjungan</p>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="form-row cols-1">
+          <div>
+            <label class="main-field-label">Agenda Kegiatan</label>
+            <textarea class="main-input" id="agendaKegiatan" rows="5" placeholder="Contoh:&#10;1. Tim menuju ke lokasi perusahaan&#10;2. Sambutan dari perwakilan Bea Cukai dan Perusahaan&#10;3. Presentasi oleh perusahaan&#10;4. Sesi diskusi dan tanya jawab&#10;5. Observasi lapangan"></textarea>
+          </div>
+        </div>
+        <div class="form-row cols-2">
+          <div>
+            <label class="main-field-label">Topik Diskusi Utama</label>
+            <textarea class="main-input" id="topikDiskusi" rows="3" placeholder="Topik-topik yang dibahas dalam sesi diskusi..."></textarea>
+          </div>
+          <div>
+            <label class="main-field-label">Temuan Observasi Lapangan</label>
+            <textarea class="main-input" id="temuanLapangan" rows="3" placeholder="Temuan atau catatan dari observasi lapangan..."></textarea>
+          </div>
+        </div>
+        <div class="ai-section">
+          <button class="btn-ai" onclick="generateSection('B')">
+            <span class="ai-icon">✦</span> Kembangkan dengan AI
+          </button>
+        </div>
+        <div id="resultB" style="display:none;margin-top:16px;">
+          <div class="result-label">Hasil AI — Poin B</div>
+          <div class="result-box" id="resultBText"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POIN C -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-badge">C</div>
+        <div class="section-title-text">
+          <h2>Hasil yang Dicapai</h2>
+          <p>Capaian dan output dari kegiatan kunjungan</p>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="form-row cols-1">
+          <div>
+            <label class="main-field-label">Capaian Kegiatan</label>
+            <textarea class="main-input" id="capaianKegiatan" rows="4" placeholder="Jelaskan hasil/capaian yang diperoleh dari kegiatan ini, misalnya: hubungan yang terjalin, isu yang diselesaikan, komitmen yang disepakati..."></textarea>
+          </div>
+        </div>
+        <div class="form-row cols-2">
+          <div>
+            <label class="main-field-label">Permasalahan yang Diidentifikasi</label>
+            <textarea class="main-input" id="permasalahan" rows="3" placeholder="Jika ada (opsional)..."></textarea>
+          </div>
+          <div>
+            <label class="main-field-label">Tindak Lanjut yang Disepakati</label>
+            <textarea class="main-input" id="tindakLanjut" rows="3" placeholder="Jika ada (opsional)..."></textarea>
+          </div>
+        </div>
+        <div class="ai-section">
+          <button class="btn-ai" onclick="generateSection('C')">
+            <span class="ai-icon">✦</span> Kembangkan dengan AI
+          </button>
+        </div>
+        <div id="resultC" style="display:none;margin-top:16px;">
+          <div class="result-label">Hasil AI — Poin C</div>
+          <div class="result-box" id="resultCText"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POIN D -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-badge">D</div>
+        <div class="section-title-text">
+          <h2>Simpulan dan Saran</h2>
+          <p>Kesimpulan dan rekomendasi kegiatan</p>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="form-row cols-2">
+          <div>
+            <label class="main-field-label">Evaluasi Keseluruhan</label>
+            <select class="main-input" id="evaluasiKeseluruhan">
+              <option value="lancar">Berjalan lancar sesuai rencana</option>
+              <option value="lancar_kendala">Berjalan lancar dengan beberapa kendala kecil</option>
+              <option value="perlu_tindaklanjut">Perlu tindak lanjut lebih intensif</option>
+            </select>
+          </div>
+          <div>
+            <label class="main-field-label">Rekomendasi Kunjungan Lanjutan</label>
+            <select class="main-input" id="rekomendasiLanjutan">
+              <option value="tidak">Tidak diperlukan</option>
+              <option value="ya_3bulan">Ya, dalam 3 bulan</option>
+              <option value="ya_6bulan">Ya, dalam 6 bulan</option>
+              <option value="ya_sesuai_kebutuhan">Ya, sesuai kebutuhan</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row cols-1">
+          <div>
+            <label class="main-field-label">Saran Tambahan</label>
+            <textarea class="main-input" id="saranTambahan" rows="3" placeholder="Saran untuk perusahaan maupun internal Bea Cukai (opsional)..."></textarea>
+          </div>
+        </div>
+        <div class="ai-section">
+          <button class="btn-ai" onclick="generateSection('D')">
+            <span class="ai-icon">✦</span> Kembangkan dengan AI
+          </button>
+          <button class="btn-ai" onclick="generateAll()" style="background:linear-gradient(135deg,#8B6914,#c9a84c);color:var(--navy);">
+            <span class="ai-icon">⚡</span> Generate Semua Poin
+          </button>
+        </div>
+        <div id="resultD" style="display:none;margin-top:16px;">
+          <div class="result-label">Hasil AI — Poin D</div>
+          <div class="result-box" id="resultDText"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Action Bar -->
+<div class="action-bar">
+  <div class="action-status" id="actionStatus">
+    <span>✓ Siap generate laporan</span>
+  </div>
+  <button class="btn-export" onclick="exportPDF()">
+    📄 Export PDF
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== DATA PEGAWAI =====================
+const dataPegawai = [{"Nama Pegawai":"Hatta Wardhana","Jabatan":"Kepala Kantor"},{"Nama Pegawai":"Eko Heri Prasetyo","Jabatan":"Kepala Subbagian Umum"},{"Nama Pegawai":"Thomas Nugroho Adi Prasetiyo","Jabatan":"Kepala Seksi Penindakan dan Penyidikan"},{"Nama Pegawai":"Jaka Julianta","Jabatan":"Kepala Seksi Perbendaharaan"},{"Nama Pegawai":"Kupang Muhammad Luqman","Jabatan":"Kepala Seksi Pelayanan Kepabeanan dan Cukai I"},{"Nama Pegawai":"Kadiyat","Jabatan":"Kepala Seksi Pelayanan Kepabeanan dan Cukai II"},{"Nama Pegawai":"Catur Heru Broto","Jabatan":"Kepala Seksi Pelayanan Kepabeanan dan Cukai III"},{"Nama Pegawai":"Budi Santoso","Jabatan":"Kepala Seksi Pelayanan Kepabeanan dan Cukai IV"},{"Nama Pegawai":"Halasan Maulana Silitonga","Jabatan":"Kepala Seksi Pelayanan Kepabeanan dan Cukai V"},{"Nama Pegawai":"Arif Sholikhuddin","Jabatan":"Kepala Seksi Pelayanan Kepabeanan dan Cukai VI"},{"Nama Pegawai":"Fredy Sabto Nusanggono","Jabatan":"Kepala Seksi Pelayanan Kepabeanan dan Cukai VII"},{"Nama Pegawai":"Aries Permana","Jabatan":"Kepala Seksi Pelayanan Kepabeanan dan Cukai VIII"},{"Nama Pegawai":"Indra Rahmadi Sinuraya","Jabatan":"Kepala Seksi Pelayanan Kepabeanan dan Cukai IX"},{"Nama Pegawai":"Veneranda Dharmayati","Jabatan":"Kepala Seksi Pelayanan Kepabeanan dan Cukai X"},{"Nama Pegawai":"Suhirno","Jabatan":"Kepala Seksi Kepatuhan Internal"},{"Nama Pegawai":"Hardijanto","Jabatan":"Kepala Seksi Penyuluhan dan Layanan Informasi"},{"Nama Pegawai":"Agus Sudono","Jabatan":"Kepala Seksi Pengolahan Data dan Administrasi Dokumen"},{"Nama Pegawai":"Benny Raharja","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Dwi Yan Purwanto","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Fenny Mardini","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Sukarno","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Amandha Dwie Lestari","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Rudi Wicaksono","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Donny Pattinussa","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Temy Eko Prastyo","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Muchamad Rokim","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Nurkholis","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Candra Eka Sandy","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Ari Yusalam","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Khoirul Fajeri","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Munfarid Abdillah","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Damay Kurniawan","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Romadi Seto Mulianto","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Siti Chotimah","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Fredi Tri Winoto","Jabatan":"Pemeriksa Bea dan Cukai Ahli Pertama"},{"Nama Pegawai":"Berta Susanti","Jabatan":"Pemeriksa Bea dan Cukai Mahir"},{"Nama Pegawai":"Rizky Miyanda Julyatama","Jabatan":"Pranata Keuangan APBN Terampil"},{"Nama Pegawai":"Arfarizal","Jabatan":"Penata Layanan Operasional Tk.I"},{"Nama Pegawai":"Rendy Tommy Indrawan","Jabatan":"Penata Layanan Operasional Tk.I"},{"Nama Pegawai":"Endah Hastutiwismani","Jabatan":"Pengolah Data dan Informasi Tk.I"},{"Nama Pegawai":"Made Aditya Ari Satriya","Jabatan":"Penata Layanan Operasional Tk.II"},{"Nama Pegawai":"Eka Sari","Jabatan":"Penata Layanan Operasional Tk.II"},{"Nama Pegawai":"Teguh Dwi Cahyono","Jabatan":"Pengadministrasi Perkantoran Tk.I"},{"Nama Pegawai":"Koko Budi Susanto","Jabatan":"Penata Layanan Operasional Tk.II"},{"Nama Pegawai":"Andrea Yudha Astira","Jabatan":"Penata Layanan Operasional Tk.II"},{"Nama Pegawai":"Nurul Hakim","Jabatan":"Penata Layanan Operasional Tk.II"},{"Nama Pegawai":"Guruh Adi Hanggara","Jabatan":"Pengadministrasi Perkantoran Tk.I"},{"Nama Pegawai":"Deni Aristyan Amrin","Jabatan":"Penata Layanan Operasional Tk.III"},{"Nama Pegawai":"Muhammad Iqbal","Jabatan":"Penata Layanan Operasional Tk.III"},{"Nama Pegawai":"Ali Hidayatullah","Jabatan":"Penata Layanan Operasional Tk.III"},{"Nama Pegawai":"Dhimas Bagus Wahyu Febrianto","Jabatan":"Penata Layanan Operasional Tk.III"},{"Nama Pegawai":"Dian Meilinda","Jabatan":"Pengolah Data dan Informasi Tk.I"},{"Nama Pegawai":"Firsal Ariandy","Jabatan":"Penata Layanan Operasional Tk.III"},{"Nama Pegawai":"Moh. Taufik Kholil","Jabatan":"Pelaksana Tugas Belajar Tk.III"},{"Nama Pegawai":"Muhammad As'Ad","Jabatan":"Penata Layanan Operasional Tk.III"},{"Nama Pegawai":"Bayu Martha Dwinata","Jabatan":"Penata Layanan Operasional Tk.III"},{"Nama Pegawai":"Shofyan Kurniansah","Jabatan":"Penata Layanan Operasional Tk.III"},{"Nama Pegawai":"Kridya Anugrah Primadhany","Jabatan":"Penata Layanan Operasional Tk.III"},{"Nama Pegawai":"Meilynda Ahlam Matoviany","Jabatan":"Penata Layanan Operasional Tk.IV"},{"Nama Pegawai":"Catur Ariawan Prakosa","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Gilang Ramadhan","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Rahmad Ardian","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Jumran","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Kadek Rika Prasetya Warman","Jabatan":"Pengadministrasi Perkantoran Tk.I"},{"Nama Pegawai":"Yoga Setiawan","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Wima Dwi Sebtamuda","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Isa Damayanti Sudibyo","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Andrean Fuza Amrulloh","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Wardah Humaira","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Fahmi Arisona","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Aryan Eka Ardyanto","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Rochyan Nurul Rochim","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Rahmat Rifal Parela","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Rakaditya Alendtha Mappakaya","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Yusuf Satria Al Azhar","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Juan Pribadi","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Ahmad Dzulfikri Ali Ridho","Jabatan":"Pengolah Data dan Informasi Tk.II"},{"Nama Pegawai":"Wisnu Andhika Murthi","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Firdaus Putra Perdana","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Harsono Andharu","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Dimas Putra Pamungkas","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Apindra Dimas Cahyanto","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Moch. Wisnu Wardhana","Jabatan":"Pengadministrasi Perkantoran Tk.I"},{"Nama Pegawai":"Nuh Bachrudin Rizqi","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Didik Subali","Jabatan":"Pengadministrasi Perkantoran Tk.I"},{"Nama Pegawai":"Rachmat Abdillah","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Ahmad Junaidi Prasetya","Jabatan":"Pengadministrasi Perkantoran Tk.I"},{"Nama Pegawai":"Mohammad Basyarudin","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Bambang Wijaya Satria Rahmad Allah","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Firdaus Habibullah Hidayat","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Djatmiko Adi Nugroho","Jabatan":"Pengadministrasi Perkantoran Tk.I"},{"Nama Pegawai":"Dimas Bagoes Prakoso","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Yakobus Paulus Angelino Lazar","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Albertus Yudha Sanjaya","Jabatan":"Pengadministrasi Perkantoran Tk.II"},{"Nama Pegawai":"Dwi Rama Persada Putra","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Doni Rizky Febrianto","Jabatan":"Pengadministrasi Perkantoran Tk.I"},{"Nama Pegawai":"Mohammad Endraw Rizky Angelo","Jabatan":"Pengadministrasi Perkantoran Tk.I"},{"Nama Pegawai":"Bagas Kurnia Adi","Jabatan":"Pengolah Data dan Informasi Tk.III"},{"Nama Pegawai":"Raka Zul Fahmi Ramadhan","Jabatan":"Pengolah Data dan Informasi Tk.IV"},{"Nama Pegawai":"I Made Dwiky Martha Rinaldi","Jabatan":"Pengadministrasi Perkantoran Tk.II"},{"Nama Pegawai":"Varian Khasira Janitra","Jabatan":"Pengadministrasi Perkantoran Tk.II"},{"Nama Pegawai":"Nabil Birri Muhammad","Jabatan":"Penata Keprotokolan Tk.V (Sekretaris Eselon III Kepala Instansi Vertikal)"},{"Nama Pegawai":"Malvino Baitasyah","Jabatan":"Pengadministrasi Perkantoran Tk.II"},{"Nama Pegawai":"Kevin Nicodemus Manurung","Jabatan":"Pengadministrasi Perkantoran Tk.II"},{"Nama Pegawai":"Aditya Yuristyawan Galileo","Jabatan":"Pengadministrasi Perkantoran Tk.II"},{"Nama Pegawai":"Muh Muhyiddin Nur","Jabatan":"Pengadministrasi Perkantoran Tk.II"},{"Nama Pegawai":"Galang Ardiansyah","Jabatan":"Pengadministrasi Perkantoran Tk.II"},{"Nama Pegawai":"Syahrul Cahya Wibawa","Jabatan":"Pengadministrasi Perkantoran Tk.II"},{"Nama Pegawai":"Syahrul Ramadhan","Jabatan":"Pengadministrasi Perkantoran Tk.II"},{"Nama Pegawai":"Fendy Wahyu Romdhoni","Jabatan":"Pengadministrasi Perkantoran Tk.III"},{"Nama Pegawai":"Iis Chomsatus Sa'Diyah","Jabatan":"Pengadministrasi Perkantoran Tk.III"},{"Nama Pegawai":"Sinta Maratus Solikah","Jabatan":"Pengadministrasi Perkantoran Tk.III"},{"Nama Pegawai":"Indri Wahyuni","Jabatan":"Pengadministrasi Perkantoran Tk.III"},{"Nama Pegawai":"Abid Aditya Savan","Jabatan":"Pengadministrasi Perkantoran Tk.III"},{"Nama Pegawai":"Panggih Wahyu Adito Galih","Jabatan":"Pengadministrasi Perkantoran Tk.III"},{"Nama Pegawai":"Rizka Fauziah","Jabatan":"Penata Keprotokolan Tk.V (Sekretaris Eselon III Kepala Instansi Vertikal)"},{"Nama Pegawai":"Reza Ramadhan Alfarizi","Jabatan":"Pengadministrasi Perkantoran Tk.III"},{"Nama Pegawai":"Novala Naqiyya Salsabila","Jabatan":"Pengadministrasi Perkantoran Tk.III"},{"Nama Pegawai":"Annida Agustina Dewi","Jabatan":"Pengadministrasi Perkantoran Tk.III"}];
+
+let selectedPelaksana = new Set();
+let filteredData = [...dataPegawai];
+
+// ===================== INIT =====================
+window.onload = function() {
+  const savedKey = localStorage.getItem('lpt_api_key');
+  if (savedKey) document.getElementById('apiKey').value = savedKey;
+  
+  // Set default dates
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('tanggalLaporan').value = today;
+  
+  renderPelaksana();
+  
+  // Auto-save API key
+  document.getElementById('apiKey').addEventListener('input', function() {
+    localStorage.setItem('lpt_api_key', this.value);
+  });
+};
+
+function renderPelaksana() {
+  const list = document.getElementById('pelaksanaList');
+  const q = document.getElementById('searchPegawai').value.toLowerCase();
+  filteredData = dataPegawai.filter(p => 
+    p['Nama Pegawai'].toLowerCase().includes(q) || 
+    p['Jabatan'].toLowerCase().includes(q)
+  );
+  
+  list.innerHTML = filteredData.map((p, i) => `
+    <div class="pelaksana-item ${selectedPelaksana.has(p['Nama Pegawai']) ? 'selected' : ''}" onclick="togglePelaksana('${p['Nama Pegawai'].replace(/'/g, "\\'")}')">
+      <input type="checkbox" ${selectedPelaksana.has(p['Nama Pegawai']) ? 'checked' : ''} onclick="event.stopPropagation()">
+      <div class="pelaksana-info">
+        <div class="pelaksana-nama">${p['Nama Pegawai']}</div>
+        <div class="pelaksana-jabatan">${p['Jabatan']}</div>
+      </div>
+    </div>
+  `).join('');
+  
+  document.getElementById('selectedCount').textContent = `${selectedPelaksana.size} pegawai dipilih`;
+}
+
+function filterPelaksana() { renderPelaksana(); }
+
+function togglePelaksana(nama) {
+  if (selectedPelaksana.has(nama)) selectedPelaksana.delete(nama);
+  else selectedPelaksana.add(nama);
+  renderPelaksana();
+}
+
+function toggleApiVisibility() {
+  const inp = document.getElementById('apiKey');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// ===================== AI GENERATE =====================
+function getApiKey() {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) { showToast('Masukkan API Key Anthropic terlebih dahulu!', true); return null; }
+  return key;
+}
+
+function getFormData() {
+  return {
+    namaPerusahaan: document.getElementById('namaPerusahaan').value || 'PT. [Nama Perusahaan]',
+    jenisKegiatan: document.getElementById('jenisKegiatan').value,
+    lokasiPerusahaan: document.getElementById('lokasiPerusahaan').value,
+    tanggalKegiatan: document.getElementById('tanggalKegiatan').value,
+    nomorST: document.getElementById('nomorST').value,
+    tanggalST: document.getElementById('tanggalST').value,
+    catatanLatarBelakang: document.getElementById('catatanLatarBelakang').value,
+    ruangLingkup: document.getElementById('ruangLingkup').value,
+    agendaKegiatan: document.getElementById('agendaKegiatan').value,
+    topikDiskusi: document.getElementById('topikDiskusi').value,
+    temuanLapangan: document.getElementById('temuanLapangan').value,
+    capaianKegiatan: document.getElementById('capaianKegiatan').value,
+    permasalahan: document.getElementById('permasalahan').value,
+    tindakLanjut: document.getElementById('tindakLanjut').value,
+    evaluasi: document.getElementById('evaluasiKeseluruhan').value,
+    rekomendasi: document.getElementById('rekomendasiLanjutan').value,
+    saranTambahan: document.getElementById('saranTambahan').value,
+    pelaksana: Array.from(selectedPelaksana).map(nama => {
+      const p = dataPegawai.find(x => x['Nama Pegawai'] === nama);
+      return p ? `${nama} (${p['Jabatan']})` : nama;
+    }).join(', ')
+  };
+}
+
+const prompts = {
+  A: (d) => `Kamu adalah penulis laporan dinas resmi pemerintah Indonesia, khususnya untuk Bea Cukai (Direktorat Jenderal Bea dan Cukai). Tulis bagian PENDAHULUAN (Poin A) dari Laporan Pelaksanaan Tugas (LPT) untuk kegiatan Customs Visit Customer.
+
+Data:
+- Nama Perusahaan: ${d.namaPerusahaan}
+- Jenis Kegiatan: ${d.jenisKegiatan}
+- Lokasi: ${d.lokasiPerusahaan}
+- Tanggal Kegiatan: ${d.tanggalKegiatan}
+- Nomor Surat Tugas: ${d.nomorST} tanggal ${d.tanggalST}
+- Ruang Lingkup: ${d.ruangLingkup || 'kegiatan kepabeanan dan cukai perusahaan'}
+- Catatan tambahan: ${d.catatanLatarBelakang || '-'}
+
+Tuliskan tiga sub-poin berikut dalam bahasa Indonesia formal, gaya dinas pemerintah:
+1. Latar Belakang: jelaskan konteks dan urgensi kunjungan sebagai industrial assistance
+2. Maksud dan Tujuan: jelaskan tujuan spesifik intimasi/asistensi kepabeanan
+3. Ruang Lingkup: jelaskan lingkup kegiatan kepabeanan yang dikunjungi
+
+Format output: tulis langsung teks naratif per sub-poin dengan heading "1. Latar Belakang", "2. Maksud dan Tujuan", "3. Ruang Lingkup". Jangan tambahkan nomor poin A. Gunakan gaya bahasa formal dan baku.`,
+
+  B: (d) => `Kamu adalah penulis laporan dinas resmi pemerintah Indonesia untuk Bea Cukai. Tulis bagian KEGIATAN YANG DILAKSANAKAN (Poin B) dari Laporan Pelaksanaan Tugas (LPT) kegiatan Customs Visit Customer.
+
+Data:
+- Nama Perusahaan: ${d.namaPerusahaan}
+- Tanggal Kegiatan: ${d.tanggalKegiatan}
+- Agenda Kegiatan: ${d.agendaKegiatan || 'tim menuju lokasi, sambutan, presentasi perusahaan, diskusi, observasi lapangan'}
+- Topik Diskusi: ${d.topikDiskusi || '-'}
+- Temuan Lapangan: ${d.temuanLapangan || '-'}
+- Pelaksana: ${d.pelaksana || 'Tim Bea Cukai Pasuruan'}
+
+Tuliskan narasi kegiatan yang dilaksanakan dalam format poin bernomor. Setiap poin harus berisi deskripsi yang cukup detail, bukan sekadar satu baris. Gunakan bahasa Indonesia formal dan baku. Mulai langsung dari "1." tanpa heading tambahan.`,
+
+  C: (d) => `Kamu adalah penulis laporan dinas resmi pemerintah Indonesia untuk Bea Cukai. Tulis bagian HASIL YANG DICAPAI (Poin C) dari Laporan Pelaksanaan Tugas (LPT) kegiatan Customs Visit Customer.
+
+Data:
+- Nama Perusahaan: ${d.namaPerusahaan}
+- Capaian: ${d.capaianKegiatan || 'terjalinnya hubungan baik antara Bea Cukai dan perusahaan'}
+- Permasalahan: ${d.permasalahan || 'tidak ada permasalahan signifikan'}
+- Tindak Lanjut: ${d.tindakLanjut || '-'}
+
+Tuliskan paragraf naratif yang menggambarkan hasil dan capaian kegiatan kunjungan secara formal, komprehensif, dan proporsional. Sebutkan dampak positif bagi hubungan institusional dan pelayanan kepabeanan. Jika ada tindak lanjut, sebutkan. Gunakan bahasa Indonesia formal dan baku. Langsung tulis paragraf tanpa heading.`,
+
+  D: (d) => `Kamu adalah penulis laporan dinas resmi pemerintah Indonesia untuk Bea Cukai. Tulis bagian SIMPULAN DAN SARAN (Poin D) dari Laporan Pelaksanaan Tugas (LPT) kegiatan Customs Visit Customer.
+
+Data:
+- Nama Perusahaan: ${d.namaPerusahaan}
+- Evaluasi: ${d.evaluasi}
+- Rekomendasi lanjutan: ${d.rekomendasi}
+- Saran tambahan: ${d.saranTambahan || '-'}
+
+Tuliskan dua paragraf:
+1. Simpulan: evaluasi keseluruhan pelaksanaan kegiatan (kelancaran, kesesuaian rencana, dst)
+2. Saran: rekomendasi konkret untuk Bea Cukai maupun perusahaan ke depan
+
+Gunakan bahasa Indonesia formal dan baku. Langsung tulis paragraf tanpa heading "Simpulan" atau "Saran", tapi pisahkan dengan jeda baris.`
+};
+
+async function generateSection(section) {
+  const key = getApiKey();
+  if (!key) return;
+  
+  const d = getFormData();
+  const prompt = prompts[section](d);
+  
+  const resultDiv = document.getElementById(`result${section}`);
+  const resultText = document.getElementById(`result${section}Text`);
+  
+  resultDiv.style.display = 'block';
+  resultText.className = 'result-box loading';
+  resultText.textContent = '✦ Sedang mengembangkan narasi...';
+  
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'API Error');
+    }
+    
+    const data = await response.json();
+    const text = data.content[0].text;
+    resultText.className = 'result-box';
+    resultText.textContent = text;
+    showToast(`Poin ${section} berhasil dikembangkan AI ✓`);
+  } catch (err) {
+    resultText.className = 'result-box loading';
+    resultText.textContent = `Error: ${err.message}`;
+    showToast('Gagal menghubungi API Anthropic', true);
+  }
+}
+
+async function generateAll() {
+  const key = getApiKey();
+  if (!key) return;
+  for (const s of ['A', 'B', 'C', 'D']) {
+    await generateSection(s);
+    await new Promise(r => setTimeout(r, 500));
+  }
+}
+
+// ===================== PDF EXPORT =====================
+function formatTanggal(dateStr) {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function getResultText(section) {
+  const el = document.getElementById(`result${section}`);
+  if (el && el.style.display !== 'none') {
+    return document.getElementById(`result${section}Text`).textContent;
+  }
+  return null;
+}
+
+async function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  
+  const d = getFormData();
+  const namaPerusahaan = document.getElementById('namaPerusahaan').value || 'PT. [Nama Perusahaan]';
+  const jenisKegiatan = document.getElementById('jenisKegiatan').value;
+  const tanggalKegiatan = formatTanggal(document.getElementById('tanggalKegiatan').value);
+  const nomorST = document.getElementById('nomorST').value || '-';
+  const tanggalST = formatTanggal(document.getElementById('tanggalST').value);
+  const tanggalLaporan = formatTanggal(document.getElementById('tanggalLaporan').value);
+  const lokasiPerusahaan = document.getElementById('lokasiPerusahaan').value || '-';
+  const agendaKegiatan = document.getElementById('agendaKegiatan').value;
+  const capaianKegiatan = document.getElementById('capaianKegiatan').value;
+  const saranTambahan = document.getElementById('saranTambahan').value;
+  
+  const margin = 25;
+  const pageW = 210;
+  const contentW = pageW - margin * 2;
+  let y = 15;
+  
+  // ========= HEADER =========
+  // Logo placeholder circle
+  doc.setDrawColor(10, 31, 61);
+  doc.setFillColor(10, 31, 61);
+  doc.circle(margin + 10, y + 10, 10, 'F');
+  doc.setTextColor(201, 168, 76);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('BC', margin + 10, y + 11, { align: 'center' });
+  
+  // Header text
+  doc.setTextColor(10, 31, 61);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  const headerX = margin + 23;
+  const headerLines = [
+    'KEMENTERIAN KEUANGAN REPUBLIK INDONESIA',
+    'DIREKTORAT JENDERAL BEA DAN CUKAI',
+    'KANTOR WILAYAH DJBC JAWA TIMUR I',
+    'KANTOR PENGAWASAN DAN PELAYANAN BEA DAN CUKAI TMP A PASURUAN'
+  ];
+  headerLines.forEach((line, i) => {
+    doc.text(line, headerX, y + 4 + (i * 4.5));
+  });
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(80, 80, 80);
+  doc.text('Jl. Rembang Industri Raya No.1, Pasuruan 67152 | Tel. (0343) 747979 | bcpasuruan@customs.go.id', headerX, y + 22);
+  
+  // Divider gold line
+  y += 28;
+  doc.setDrawColor(201, 168, 76);
+  doc.setLineWidth(1.2);
+  doc.line(margin, y, pageW - margin, y);
+  doc.setLineWidth(0.3);
+  doc.line(margin, y + 1.5, pageW - margin, y + 1.5);
+  
+  // Title
+  y += 10;
+  doc.setTextColor(10, 31, 61);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('LAPORAN PELAKSANAAN TUGAS', pageW / 2, y, { align: 'center' });
+  y += 6;
+  doc.setFontSize(10);
+  doc.text(`${jenisKegiatan.toUpperCase()} ${namaPerusahaan.toUpperCase()}`, pageW / 2, y, { align: 'center' });
+  y += 8;
+  
+  // ========= SECTION HELPER =========
+  const checkPage = (needed) => {
+    if (y + needed > 270) {
+      doc.addPage();
+      y = 20;
+    }
+  };
+
+  const writeParagraph = (text, indent = 0) => {
+    if (!text) return;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(30, 30, 30);
+    const lines = doc.splitTextToSize(text, contentW - indent);
+    lines.forEach(line => {
+      checkPage(6);
+      doc.text(line, margin + indent, y);
+      y += 5.5;
+    });
+  };
+
+  const writeSectionHeader = (letter, title) => {
+    checkPage(12);
+    doc.setFillColor(10, 31, 61);
+    doc.roundedRect(margin, y, contentW, 8, 1, 1, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text(`${letter}.   ${title}`, margin + 4, y + 5.5);
+    y += 11;
+  };
+
+  const writeSubPoint = (num, label, text) => {
+    checkPage(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(10, 31, 61);
+    doc.text(`    ${num}.  ${label}`, margin, y);
+    y += 5.5;
+    if (text) writeParagraph(text, 12);
+    y += 2;
+  };
+
+  // ========= POIN A =========
+  writeSectionHeader('A', 'Pendahuluan');
+  
+  const textA = getResultText('A');
+  if (textA) {
+    writeParagraph(textA, 8);
+  } else {
+    writeSubPoint(1, 'Latar Belakang', 
+      `Dalam rangka pelaksanaan tugas dan fungsi bea cukai sebagai industrial assistance kepada pengguna jasa, Bea Cukai Pasuruan melaksanakan kegiatan intimasi dengan berkunjung ke ${namaPerusahaan} untuk mendengar dan menerima masukan serta konsultasi dari Perusahaan. ${document.getElementById('catatanLatarBelakang').value}`
+    );
+    writeSubPoint(2, 'Maksud dan Tujuan',
+      `Melakukan intimasi dengan Perusahaan dalam rangka asistensi pelaksanaan kegiatan kepabeanan dan cukai pada ${namaPerusahaan}.`
+    );
+    writeSubPoint(3, 'Ruang Lingkup',
+      document.getElementById('ruangLingkup').value || `Kegiatan kepabeanan dan cukai yang dilaksanakan oleh ${namaPerusahaan}.`
+    );
+    writeSubPoint(4, 'Dasar',
+      `Surat Tugas nomor ${nomorST} tanggal ${tanggalST}.`
+    );
+  }
+  y += 3;
+
+  // ========= POIN B =========
+  writeSectionHeader('B', 'Kegiatan yang Dilaksanakan');
+  const textB = getResultText('B');
+  if (textB) {
+    writeParagraph(textB, 8);
+  } else {
+    const agenda = agendaKegiatan || '1. Tim menuju ke lokasi perusahaan\n2. Sambutan dari perwakilan Bea Cukai dan Perusahaan\n3. Presentasi oleh perwakilan perusahaan\n4. Sesi diskusi dengan perusahaan\n5. Observasi lapangan';
+    agenda.split('\n').forEach(line => {
+      if (line.trim()) writeParagraph(line.trim(), 8);
+    });
+  }
+  y += 3;
+
+  // ========= POIN C =========
+  writeSectionHeader('C', 'Hasil yang Dicapai');
+  const textC = getResultText('C');
+  writeParagraph(textC || capaianKegiatan || `Hubungan yang baik antara Bea Cukai dengan ${namaPerusahaan} dalam rangka pelaksanaan tugas dan fungsi Bea Cukai dan kegiatan kepabeanan dan cukai pengguna jasa.`, 8);
+  y += 3;
+
+  // ========= POIN D =========
+  writeSectionHeader('D', 'Simpulan dan Saran');
+  const textD = getResultText('D');
+  writeParagraph(textD || saranTambahan || 'Secara keseluruhan kegiatan berjalan dengan lancar dan sesuai dengan rencana pelaksanaan kegiatan yang telah dibuat.', 8);
+  y += 3;
+
+  // ========= POIN E (PENUTUP & TTD) =========
+  writeSectionHeader('E', 'Penutup');
+  writeParagraph('Demikian disampaikan sebagai laporan.', 8);
+  y += 6;
+
+  // Lokasi & Tanggal
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(30, 30, 30);
+  doc.text(`Dibuat di Pasuruan`, pageW - margin, y, { align: 'right' });
+  y += 5;
+  doc.text(`pada tanggal ${tanggalLaporan}`, pageW - margin, y, { align: 'right' });
+  y += 8;
+
+  // Tanda Tangan
+  const pelaksanaArr = Array.from(selectedPelaksana);
+  if (pelaksanaArr.length > 0) {
+    checkPage(30);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(10, 31, 61);
+    doc.text('Pelaksana SPD', pageW / 2, y, { align: 'center' });
+    y += 6;
+
+    // Layout ttd 2 kolom
+    const colW = contentW / 2;
+    for (let i = 0; i < pelaksanaArr.length; i += 2) {
+      checkPage(28);
+      const left = pelaksanaArr[i];
+      const right = pelaksanaArr[i + 1];
+      const leftData = dataPegawai.find(p => p['Nama Pegawai'] === left);
+      const rightData = right ? dataPegawai.find(p => p['Nama Pegawai'] === right) : null;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Ditandatangani secara elektronik', margin + colW / 2, y, { align: 'center' });
+      if (right) doc.text('Ditandatangani secara elektronik', margin + colW + colW / 2, y, { align: 'center' });
+      y += 12;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(10, 31, 61);
+      doc.text(left, margin + colW / 2, y, { align: 'center' });
+      if (right) doc.text(right, margin + colW + colW / 2, y, { align: 'center' });
+      y += 5;
+
+      if (leftData) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(80, 80, 80);
+        const jabL = doc.splitTextToSize(leftData['Jabatan'], colW - 10);
+        jabL.forEach(l => { doc.text(l, margin + colW / 2, y, { align: 'center' }); y += 4; });
+      }
+      
+      // Reset y for right column if left was taller
+      const yAfterLeft = y;
+      if (right && rightData) {
+        y = yAfterLeft;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(80, 80, 80);
+        const jabR = doc.splitTextToSize(rightData['Jabatan'], colW - 10);
+        // Align right jabatan to same y position
+      }
+      y = yAfterLeft + 6;
+    }
+  }
+
+  // Footer
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(201, 168, 76);
+    doc.setLineWidth(0.5);
+    doc.line(margin, 285, pageW - margin, 285);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(120, 120, 120);
+    doc.text('KPPBC TMP A Pasuruan — Bea Cukai Pasuruan', margin, 289);
+    doc.text(`Halaman ${i} dari ${pageCount}`, pageW - margin, 289, { align: 'right' });
+  }
+
+  const filename = `LPT_CVC_${namaPerusahaan.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+  doc.save(filename);
+  showToast(`PDF berhasil diunduh: ${filename} ✓`);
+}
+
+// ===================== TOAST =====================
+function showToast(msg, isError = false) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast${isError ? ' error' : ''} show`;
+  setTimeout(() => { toast.className = `toast${isError ? ' error' : ''}`; }, 3500);
+}
+</script>
+</body>
+</html>
